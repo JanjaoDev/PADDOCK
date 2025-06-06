@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paddock Access Panel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      background-color: #000b1c;
+      color: #00ffe1;
+      overflow: hidden;
+    }
+    .loading-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000b1c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: fadeOut 3s forwards;
+      animation-delay: 2s;
+    }
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+    .scanner {
+      width: 200px;
+      height: 4px;
+      background: linear-gradient(to right, transparent, #00ffe1, transparent);
+      animation: scan 2s infinite;
+    }
+    @keyframes scan {
+      0% { transform: translateX(-200px); }
+      100% { transform: translateX(200px); }
+    }
+    
+    .panel {
+      opacity: 0;
+      animation: panelIn 2s forwards;
+      animation-delay: 3s;
+      padding: 20px;
+    }
+    @keyframes panelIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+        .ops-surveillance-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 40px;
+    margin-top: 40px;
+    align-items: flex-start;
+    }
+
+    .hex-container {
+    position: relative;
+    width: 530px;
+    height: 510px;
+    margin: auto;
+    }
+
+    /* CAM label base */
+    .cam-label {
+    position: absolute;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: white;
+    text-shadow: 0 0 3px #00ffe1aa;
+    z-index: 5;
+    pointer-events: none;
+    }
+
+    /* ตำแหน่ง CAM รอบหกเหลี่ยม */
+    .cam-01 { top: -20px; left: 50%; transform: translateX(-50%); }
+    .cam-02 { top: 80px; right: -40px; }
+    .cam-03 { bottom: 80px; right: -40px; }
+    .cam-04 { bottom: -20px; left: 50%; transform: translateX(-50%); }
+    .cam-05 { bottom: 80px; left: -60px; }
+    .cam-06 { top: 80px; left: -60px; }
+
+    .log-console {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    background: black;
+    color: #00ffe1;
+    font-size: 12px;
+    padding: 10px;
+    overflow-y: auto;
+    border-top: 1px solid #00ffe1;
+    box-sizing: border-box;
+    z-index: 999;
+    }
+
+    .gate-ops-panel {
+    flex: 1;
+    border: 1px dashed #00ffe144;
+    padding: 20px;
+    }
+
+    .surveillance-panel {
+    flex: 1;
+    border: none;
+    padding: 20px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 2fr 2fr;
+      gap: 20px;
+    }
+
+    .text-move {
+    position: absolute;
+     margin-bottom: 20px;
+    right: 630px;
+    color: #00ffe1;
+    font-size: 16px;
+    z-index: 5;
+    }
+
+    .title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .headtitle {
+      font-family: 'Russo One', sans-serif;
+      color: aliceblue;
+      font-size: 50px;
+    }
+
+        .IPtitle {
+      font-family: 'Russo One', sans-serif;
+      color: aliceblue;
+      font-size: 40px;
+    }
+
+    .open-gate-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: transparent;
+      color: #00ffe1;
+      border: 1px solid #00ffe1;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background 0.3s;
+    }
+    .open-gate-btn:hover {
+      background-color: #00ffe133;
+    }
+    .gate-shape {
+    position: relative;
+    width: 200px;
+    height: 250px;
+    margin: auto;
+    }
+
+    .gate-frame {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #00ffe1;
+    clip-path: polygon(
+        0% 10%, 10% 0%, 90% 0%, 100% 10%, 
+        100% 90%, 90% 100%, 10% 100%, 0% 90%
+    );
+    }
+
+    .gate-inner-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 160px;
+    height: 210px;
+    border: 1px dashed #00ffe177;
+    clip-path: polygon(
+        0% 10%, 10% 0%, 90% 0%, 100% 10%, 
+        100% 90%, 90% 100%, 10% 100%, 0% 90%
+    );
+    }
+
+    .gate-bar-left, .gate-bar-right {
+    position: absolute;
+    width: 10px;
+    height: 60px;
+    background: #00ffe144;
+    top: 95px;
+    }
+
+    .gate-bar-left {
+    left: -10px;
+    }
+
+    .gate-bar-right {
+    right: -10px;
+    }
+
+        .gate-cage {
+    position: relative;
+    width: 220px;
+    height: 260px;
+    margin: auto;
+    border: 4px solid #00ffe1;
+    clip-path: polygon(0% 10%, 10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%);
+    background: linear-gradient(to bottom, #001f2f, #001015);
+    box-shadow: 0 0 30px #00ffe155;
+    }
+
+        /* กรอบรอบกรงบางๆ */
+    .gate-cage::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
+    border: 1px dashed #00ffe133;
+    pointer-events: none;
+    z-index: 0;
+    clip-path: inherit;
+    }
+
+    .bar {
+    position: absolute;
+    width: 6px;
+    height: 100%;
+    background: #00ffe133;
+    top: 0;
+    }
+    .bar-1 { left: 25px; }
+    .bar-2 { left: 70px; }
+    .bar-3 { left: 120px; }
+    .bar-4 { left: 170px; }
+
+    .gate-door {
+    position: absolute;
+    width: 140px;
+    height: 200px;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 255, 225, 0.05);
+    border: 1px dashed #00ffe177;
+    clip-path: polygon(0% 10%, 10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%);
+    box-shadow: inset 0 0 10px #00ffe122;
+    }
+
+    .lock-light {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    background: red;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+    transform: translateX(-50%);
+    }
+
+    @keyframes blink {
+    0%, 100% { background: red; }
+    50% { background: #ff4040; }
+    }
+
+    .gate-outline {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 210px;
+      border: 2px solid #00ffe1;
+      clip-path: polygon(0% 10%, 10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%);
+    }
+
+
+    .hex-shape {
+    position: relative;
+    width: 530px;
+    height: 510px;
+    clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    background: linear-gradient(to bottom, #001f2f, #000b1c);
+    border: 2px solid #00ffe1;
+    margin: 0 auto;
+    box-shadow: inset 0 0 30px #00ffe155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    }
+
+    .hex-grid-lines {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    }
+
+    .hex-gate-right {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    }
+
+    .hex-shape::before {
+    content: none;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ff4c4c;
+    font-size: 24px;
+    font-family: 'Russo One', sans-serif;
+    text-shadow: 0 0 5px #ff0000aa;
+    z-index: 2;
+    }
+
+    .hex-shape::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(
+        50% 0%,
+        93% 25%,
+        93% 75%,
+        50% 100%,
+        7% 75%,
+        7% 25%
+    );
+    border: 2px solid #00ffe133;
+    pointer-events: none;
+    z-index: 1;
+    box-sizing: border-box;
+    }
+
+    .hex-grid-lines::before,
+    .hex-grid-lines::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(to right, rgba(0, 255, 225, 0.07) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 225, 0.07) 1px, transparent 1px);
+    background-size: 30px 30px;
+    pointer-events: none;
+    z-index: 1;
+    }
+
+    .direction-labels {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    font-family: 'Russo One', sans-serif;
+    color: #00ffe1aa;
+    font-size: 14px;
+    z-index: 2;
+    }
+
+    .direction-labels .north {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    }
+    .direction-labels .south {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    }
+    .direction-labels .east {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    }
+    .direction-labels .west {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    }
+
+
+
+.gate-operations-floating {
+  margin-top: 20px;
+  padding: 10px 0;
+  color: #00ffe1;
+  text-align: left;
+  font-size: 14px;
+}
+
+.ops-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 18px;
+  color: #00ffe1;
+  margin-bottom: 5px;
+  text-shadow: 0 0 5px #00ffe122;
+}
+
+.ops-detail .label {
+  font-weight: bold;
+  width: 140px;
+  display: inline-block;
+  color: #00ffe1;
+}
+
+.open-gate-btn {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #ff4c4c;
+  border: 2px solid #ff4c4c;
+  font-size: 16px;
+  cursor: pointer;
+  text-shadow: 0 0 5px #ff4c4c;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.open-gate-btn:hover {
+  background-color: #ff4c4c11;
+  box-shadow: 0 0 10px #ff4c4c55;
+}
+
+.gate-ops-panel,
+.surveillance-panel {
+  flex: 1;
+  border: none;
+  padding: 20px;
+}
+
+.gate-ops-header {
+  font-family: 'Russo One', sans-serif;
+  font-size: 20px;
+  color: white;
+  text-shadow: 0 0 5px #ffffff44;
+  margin-bottom: 10px;
+}
+
+.surveillance-panel .title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 20px;
+  color: white;
+  margin-bottom: 10px;
+  text-shadow: none;
+}
+
+.gate-label {
+  position: absolute;
+  bottom: 6px;
+  right: 10px;
+  font-size: 20px;
+  color: #ff4c4c;
+  font-family: 'Russo One', sans-serif;
+  text-shadow: 0 0 5px #ff000088;
+  z-index: 5;
+}
+
+  </style>
+</head>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+<body>
+
+    
+  <div class="loading-screen">
+    <div style="font-size: 24px; margin-bottom: 10px;">LOADING PADDOCK ACCESS PANEL</div>
+    <div class="scanner"></div>
+  </div>
+
+  <div class="panel">
+    <div class="layout">
+<div class="block">
+  <div class="title">LOCK ACTUATOR MAP</div>
+  
+  <div class="hex-container">
+    <div class="hex-shape">
+      <div class="hex-grid-lines"></div>
+      <div class="direction-labels">
+        <div class="north">N</div>
+        <div class="south">S</div>
+        <div class="east">E</div>
+        <div class="west">W</div>
+      </div>
+    </div>
+
+    <!-- CAM labels -->
+    <div class="cam-label cam-01">CAM 01</div>
+    <div class="cam-label cam-02">CAM 02</div>
+    <div class="cam-label cam-03">CAM 03</div>
+    <div class="cam-label cam-04">CAM 04</div>
+    <div class="cam-label cam-05">CAM 05</div>
+    <div class="cam-label cam-06">CAM 06</div>
+  </div>
+</div>
+
+
+    <div class="block">
+    <div class="IPtitle">9A.25 GATE</div>
+    <div class="headtitle">GATE CONTROL PADDOCK-9</div>
+    <div>
+        Gate Motor: UDF-234<br>
+        Lock Actuator: ENGAGED<br>
+        Status: STANDBY<br>
+        Hydraulic Pressure: 712.00 MB
+    </div>
+
+
+        <div class="gate-cage">
+        <div class="bar bar-1"></div>
+        <div class="bar bar-2"></div>
+        <div class="bar bar-3"></div>
+        <div class="bar bar-4"></div>
+        <div class="gate-door">
+            <div class="lock-light"></div>
+        </div>
+        </div>
+
+
+        <div class="ops-surveillance-container">
+        <div class="gate-ops-panel">
+            <div class="gate-ops-header">GATE OPERATIONS PANEL</div>
+            <div class="gate-status">
+                <div><span class="label">Override Auth:</span> ENABLED</div>
+                <div><span class="label">Operator Level:</span> LEVEL-4 CLEARANCE</div>
+                <div><span class="label">Panel Lockout:</span> DISENGAGED</div>
+                <div><span class="label">Security Log:</span> LIVE FEED</div>
+            </div>
+            <button class="open-gate-btn">⚠ OPEN PADDOCK GATE</button>
+            <!-- modal container ซ่อนตอนแรก -->
+            <div id="modal" style="display:none; position:fixed; top:0; left:0; 
+                width:100%; height:100%; background: rgba(0,0,0,0.8); 
+                justify-content:center; align-items:center; z-index:1000;">
+            <div style="position:relative; width:80%; height:80%; background:#001f2f; border:2px solid #00ffe1; border-radius:8px;">
+                <button id="closeModal" style="position:absolute; top:10px; right:10px; background:#ff4c4c; color:#fff; border:none; padding:5px 10px; cursor:pointer;">Close</button>
+                <iframe src="PASSCODE.HTML" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>
+
+                        <div class="surveillance-panel">
+            <div>
+            </div>
+        </div>
+        </div>
+
+            </div>
+        </div>
+
+        <div class="surveillance-panel">
+            <div class="gate-ops-header">SECURITY SYSTEM</div>
+            <div>
+            CCTV Feeds: ONLINE<br>
+            Creature Positional Map: TRACKING<br>
+            Infrared Scan: ACTIVE<br>
+            Fault Code: NONE DETECTED
+            </div>
+        </div>
+        </div>
+
+   <div class="log-console" id="log"></div>
+
+   <!-- modal container -->
+<div id="modal" style="display:none; position:fixed; top:0; left:0; 
+    width:100%; height:100%; background: rgba(0,0,0,0.8); 
+    justify-content:center; align-items:center; z-index:1000;">
+
+  <div style="position:relative; width:300px; background:#001f2f; border:2px solid #00ffe1; border-radius:8px; padding:20px;">
+    <button id="closeModal" style="position:absolute; top:10px; right:10px; background:#ff4c4c; color:#fff; border:none; padding:5px 10px; cursor:pointer;">Close</button>
+
+    <div>
+      <label for="password" style="color:#00ffe1;">Enter Password:</label>
+      <input type="password" id="password" style="width:100%; padding:5px; margin-top:5px; margin-bottom:15px; font-size:16px;" />
+      <button id="submitPass" style="width:100%; padding:10px; background:#00ffe1; color:#000; font-weight:bold; cursor:pointer;">Submit</button>
+    </div>
+
+    <div id="passStatus" style="color:#ff4c4c; margin-top:10px; height:20px;"></div>
+  </div>
+</div>
+
+</div>
+  
+  <script>
+    function generateLog() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let log = '';
+      for (let i = 0; i < 8; i++) log += chars[Math.floor(Math.random() * chars.length)];
+      return `[${new Date().toLocaleTimeString()}] SYSTEM CODE: ${log}`;
+    }
+
+    const logDiv = document.getElementById('log');
+    setInterval(() => {
+      const newLog = generateLog();
+      logDiv.innerHTML += newLog + '<br>';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }, 2000);
+
+
+
+const openGateBtn = document.querySelector('.open-gate-btn');
+const modal = document.getElementById('modal');
+const closeBtn = document.getElementById('closeModal');
+const submitPass = document.getElementById('submitPass');
+const passInput = document.getElementById('password');
+const passStatus = document.getElementById('passStatus');
+
+const correctPassword = "173682";  // กำหนดรหัสผ่านที่ถูกต้อง
+
+openGateBtn.addEventListener('click', () => {
+  modal.style.display = 'flex';
+  passInput.value = '';
+  passStatus.textContent = '';
+  passInput.focus();
+});
+
+closeBtn.addEventListener('click', () => {
+  modal.style.display = 'none';
+});
+
+submitPass.addEventListener('click', () => {
+  const entered = passInput.value;
+  if (entered === correctPassword) {
+    passStatus.style.color = '#00ffe1';
+    passStatus.textContent = 'Access Granted! Opening gate...';
+    // ใส่โค้ดเปิดประตู หรือเรียก API ที่นี่
+
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 1500);
+  } else {
+    passStatus.style.color = '#ff4c4c';
+    passStatus.textContent = 'Incorrect password. Try again.';
+    passInput.value = '';
+    passInput.focus();
+  }
+});
+
+
+
+  btn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+  });
+
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  openBtn.addEventListener("click", () => {
+    document.body.appendChild(passOverlay);
+    document.getElementById("passInput").focus();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (e.target.id === "submitPasscode") {
+      const input = document.getElementById("passInput").value;
+      const wrongMsg = document.getElementById("wrongPass");
+      if (input === "9274") {
+        wrongMsg.style.display = "none";
+        document.getElementById("passcodeOverlay").remove();
+
+        // เปลี่ยนสถานะล็อกเป็นเขียว
+        lockLight.style.animation = "none";
+        lockLight.style.background = "#00ff66";
+        lockLight.style.boxShadow = "0 0 8px #00ff66";
+
+        // เพิ่มคลาสเพื่อเล่น animation เปิดประตู
+        gateDoor.classList.add("open-gate-anim");
+
+        // เพิ่มข้อความใน log
+        logDiv.innerHTML += `[${new Date().toLocaleTimeString()}] OVERRIDE AUTH ACCEPTED. OPENING GATE...<br>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+
+      } else {
+        wrongMsg.style.display = "block";
+      }
+    }
+  });
+</script>
+</body>
+</html>

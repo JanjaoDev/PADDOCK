@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paddock 09 Panel</title>
+  <style>
+    body {
+      background-color: #000b1c;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background-color: #001f2f;
+      padding: 30px 40px;
+      border: 2px solid #00ffe1;
+      border-radius: 8px;
+      width: 850px;
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-gap: 10px;
+    }
+
+    .keypad button {
+      height: 60px;
+      font-size: 24px;
+      background-color: #000b1c;
+      color: #00ffe1;
+      border: 2px solid #00ffe133;
+      cursor: pointer;
+    }
+
+    .keypad .wide {
+      grid-column: span 2;
+    }
+
+    .display {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 22px;
+      margin-bottom: 10px;
+      color: #00ffe1;
+    }
+
+    .passcode-boxes {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0 30px 0;
+    }
+
+    .passcode-box {
+      width: 40px;
+      height: 50px;
+      border: 2px solid #00ffe1;
+      text-align: center;
+      font-size: 30px;
+      line-height: 50px;
+      background-color: #000b1c;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .controls button {
+    width: 45%;
+    height: 50px;
+    font-size: 18px;
+    background-color: #00ffe133; /* สว่างขึ้น */
+    border: 2px solid #00ffe133;
+    color: #00ffe1;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .controls button:hover {
+    background-color: #00ffe177; /* สว่างขึ้นเมื่อ hover */
+    transform: scale(1.02);
+    }
+
+
+    .status {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 20px;
+      height: 24px;
+    }
+
+    .status.success {
+      color: #00ffe1;
+    }
+
+    .status.error {
+      color: #ff6666;
+    }
+
+    .warning {
+    color: #00ffe1;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 16px;
+    font-style: italic;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="keypad">
+      <button onclick="press(7)">7</button>
+      <button onclick="press(8)">8</button>
+      <button onclick="press(9)">9</button>
+      <button onclick="press(4)">4</button>
+      <button onclick="press(5)">5</button>
+      <button onclick="press(6)">6</button>
+      <button onclick="press(1)">1</button>
+      <button onclick="press(2)">2</button>
+      <button onclick="press(3)">3</button>
+      <button onclick="press(0)">0</button>
+      <button class="wide" onclick="resetCode()">RESET</button>
+    </div>
+
+    <div class="display">
+      <div class="title">PADDOCK 09 UNLOCK REQUEST</div>
+      <div class="passcode-boxes">
+        <div class="passcode-box" id="digit1"></div>
+        <div class="passcode-box" id="digit2"></div>
+        <div class="passcode-box" id="digit3"></div>
+        <div class="passcode-box" id="digit4"></div>
+        <div class="passcode-box" id="digit5"></div>
+        <div class="passcode-box" id="digit6"></div>
+      </div>
+      <div class="controls">
+        <button onclick="resetCode()">CANCEL</button>
+        <button onclick="submitCode()">ENTER</button>
+      </div>
+
+       <div class="warning">⚠ Opening GATEs unnecessarily or without control can be a destructive act.</div>
+
+      <div class="status" id="statusMessage"></div>
+    </div>
+  </div>
+
+
+    <audio id="beep" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Beep-08b.wav"></audio>
+    <audio id="success" src="https://upload.wikimedia.org/wikipedia/commons/3/3d/Success.wav"></audio>
+    <audio id="fail" src="https://upload.wikimedia.org/wikipedia/commons/2/22/Windows_XP_Error.wav"></audio>
+
+
+<script>
+  let input = "";
+  const correctCode = "173682"; // แก้รหัสผ่านตามต้องการ
+
+  function playSound(id) {
+    const audio = document.getElementById(id);
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play();
+    }
+  }
+
+  function press(num) {
+    if (input.length < 6) {
+      input += num;
+      updateDisplay();
+      playSound("beep");
+    }
+  }
+
+  function updateDisplay() {
+    for (let i = 1; i <= 6; i++) {
+      document.getElementById("digit" + i).textContent = input[i - 1] ? "*" : "";
+    }
+  }
+
+  function resetCode() {
+    input = "";
+    updateDisplay();
+  }
+
+  function submitCode() {
+    if (input === correctCode) {
+      playSound("success");
+      alert("Access Granted. Gate is opening...");
+    } else {
+      playSound("fail");
+      alert("Access Denied. Incorrect passcode.");
+    }
+    resetCode();
+  }
+</script>
+
+
+</body>
+</html>
